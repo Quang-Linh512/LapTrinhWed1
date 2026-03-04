@@ -8,11 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,8 +61,8 @@ public class StudentApiController {
         }
     }
 
-    // PUT /api/students/{id} - Cập nhật sinh viên
-    @PutMapping("/{id}")
+    // POST /api/students/update/{id} - Cập nhật sinh viên (theo yêu cầu đề)
+    @PostMapping("/update/{id}")
     public ResponseEntity<Map<String, Object>> updateStudent(
             @PathVariable int id,
             @RequestBody Student studentDetails) {
@@ -88,8 +86,8 @@ public class StudentApiController {
         }
     }
 
-    // DELETE /api/students/{id} - Xóa sinh viên
-    @DeleteMapping("/{id}")
+    // POST /api/students/delete/{id} - Xóa sinh viên (theo yêu cầu đề)
+    @PostMapping("/delete/{id}")
     public ResponseEntity<Map<String, Object>> deleteStudent(@PathVariable int id) {
         Map<String, Object> response = new HashMap<>();
         boolean deleted = studentService.deleteStudent(id);

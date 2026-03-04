@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sinh viên - API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .table-container { margin-top: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .action-buttons { white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary"><i class="bi bi-people-fill"></i> Quản lý sinh viên (gọi API)</h1>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAdd">
+                <i class="bi bi-plus-circle"></i> Thêm sinh viên mới
+            </button>
+        </div>
+
+        <div id="alertBox"></div>
+
+        <!-- Tìm kiếm - Yêu cầu 10 (0,25đ) -->
+        <div class="card search-box">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-10">
+                        <input type="text" id="searchKeyword" class="form-control" placeholder="Tìm kiếm theo tên...">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" id="btnSearch" class="btn btn-primary w-100"><i class="bi bi-search"></i> Tìm kiếm</button>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button type="button" id="btnLoadAll" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle"></i> Xóa bộ lọc / Tải lại</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách SV - Yêu cầu 7: hiển thị danh sách gọi API Get All -->
+        <div class="card table-container">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Danh sách sinh viên</h5>
+            </div>
+            <div class="card-body">
+                <div id="loading" class="text-center py-4 d-none"><div class="spinner-border text-primary"></div><p class="mt-2">Đang tải...</p></div>
+                <div id="emptyList" class="alert alert-info text-center d-none">Không có dữ liệu sinh viên.</div>
+                <div id="tableWrap" class="table-responsive d-none">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                    <p class="text-muted"><i class="bi bi-info-circle"></i> Tổng số: <strong id="totalCount">0</strong> sinh viên</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm mới - Yêu cầu 10 (0,25đ) -->
+    <div class="modal fade" id="modalAdd" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Thêm sinh viên mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ID <span class="text-danger">*</span></label>
+                        <input type="number" id="addId" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                        <input type="text" id="addName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" id="addEmail" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" id="addSdt" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="btnSubmitAdd" class="btn btn-primary">Thêm mới</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cập nhật - Yêu cầu 9 -->
+    <div class="modal fade" id="modalUpdate" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Cập nhật sinh viên</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="updateId">
+                    <div class="mb-3">
+                        <label class="form-label">ID</label>
+                        <input type="text" id="updateIdDisplay" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                        <input type="text" id="updateName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" id="updateEmail" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" id="updateSdt" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="btnSubmitUpdate" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/api/students';
+
+        function showAlert(message, type) {
+            const box = document.getElementById('alertBox');
+            box.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show"><span>' + message + '</span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+            setTimeout(function() { box.innerHTML = ''; }, 5000);
+        }
+
+        function setLoading(show) {
+            document.getElementById('loading').classList.toggle('d-none', !show);
+            document.getElementById('tableWrap').classList.toggle('d-none', show);
+            document.getElementById('emptyList').classList.add('d-none');
+        }
+
+        function renderTable(students) {
+            const tbody = document.getElementById('studentTableBody');
+            const tableWrap = document.getElementById('tableWrap');
+            const emptyList = document.getElementById('emptyList');
+            const totalCount = document.getElementById('totalCount');
+
+            totalCount.textContent = students.length;
+            if (students.length === 0) {
+                tableWrap.classList.add('d-none');
+                emptyList.classList.remove('d-none');
+                return;
+            }
+            emptyList.classList.add('d-none');
+            tableWrap.classList.remove('d-none');
+            tbody.innerHTML = students.map(s => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${escapeHtml(s.email || '')}</td>
+                    <td>${escapeHtml(s.sdt != null ? s.sdt : '-')}</td>
+                    <td class="text-center action-buttons">
+                        <button type="button" class="btn btn-sm btn-warning me-1" onclick="openUpdate(${s.id})" title="Sửa"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="doDelete(${s.id})" title="Xóa"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Yêu cầu 7: Hiển thị danh sách gọi API Get All
+        function loadAll() {
+            setLoading(true);
+            fetch(API_BASE)
+                .then(res => res.json())
+                .then(students => {
+                    setLoading(false);
+                    renderTable(students);
+                })
+                .catch(err => {
+                    setLoading(false);
+                    showAlert('Lỗi tải danh sách: ' + err.message, 'danger');
+                    document.getElementById('emptyList').classList.remove('d-none');
+                });
+        }
+
+        // Yêu cầu 10: Tìm kiếm - gọi API search
+        function doSearch() {
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            if (!keyword) {
+                loadAll();
+                return;
+            }
+            setLoading(true);
+            fetch(API_BASE + '/search?keyword=' + encodeURIComponent(keyword))
+                .then(res => res.json())
+                .then(students => {
+                    setLoading(false);
+                    renderTable(students);
+                })
+                .catch(err => {
+                    setLoading(false);
+                    showAlert('Lỗi tìm kiếm: ' + err.message, 'danger');
+                });
+        }
+
+        // Yêu cầu 8: Xóa sinh viên - gọi API delete
+        function doDelete(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) return;
+            fetch(API_BASE + '/delete/' + id, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message || 'Xóa thành công!', 'success');
+                        loadAll();
+                    } else {
+                        showAlert(data.message || 'Xóa thất bại', 'danger');
+                    }
+                })
+                .catch(err => showAlert('Lỗi: ' + err.message, 'danger'));
+        }
+
+        // Yêu cầu 9: Cập nhật sinh viên - gọi API update
+        function openUpdate(id) {
+            fetch(API_BASE + '/' + id)
+                .then(res => res.json())
+                .then(s => {
+                    document.getElementById('updateId').value = s.id;
+                    document.getElementById('updateIdDisplay').value = s.id;
+                    document.getElementById('updateName').value = s.name || '';
+                    document.getElementById('updateEmail').value = s.email || '';
+                    document.getElementById('updateSdt').value = s.sdt || '';
+                    new bootstrap.Modal(document.getElementById('modalUpdate')).show();
+                })
+                .catch(err => showAlert('Lỗi lấy thông tin: ' + err.message, 'danger'));
+        }
+
+        document.getElementById('btnSubmitUpdate').addEventListener('click', function() {
+            const id = document.getElementById('updateId').value;
+            const body = {
+                id: parseInt(id, 10),
+                name: document.getElementById('updateName').value.trim(),
+                email: document.getElementById('updateEmail').value.trim(),
+                sdt: document.getElementById('updateSdt').value.trim()
+            };
+            if (!body.name || !body.email) {
+                showAlert('Vui lòng nhập họ tên và email.', 'warning');
+                return;
+            }
+            fetch(API_BASE + '/update/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message || 'Cập nhật thành công!', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('modalUpdate')).hide();
+                        loadAll();
+                    } else {
+                        showAlert(data.message || 'Cập nhật thất bại', 'danger');
+                    }
+                })
+                .catch(err => showAlert('Lỗi: ' + err.message, 'danger'));
+        });
+
+        // Yêu cầu 10: Thêm mới - gọi API POST
+        document.getElementById('btnSubmitAdd').addEventListener('click', function() {
+            const body = {
+                id: parseInt(document.getElementById('addId').value, 10),
+                name: document.getElementById('addName').value.trim(),
+                email: document.getElementById('addEmail').value.trim(),
+                sdt: document.getElementById('addSdt').value.trim()
+            };
+            if (!body.name || !body.email || isNaN(body.id)) {
+                showAlert('Vui lòng nhập đủ ID, họ tên và email.', 'warning');
+                return;
+            }
+            fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message || 'Thêm thành công!', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('modalAdd')).hide();
+                        document.getElementById('addId').value = '';
+                        document.getElementById('addName').value = '';
+                        document.getElementById('addEmail').value = '';
+                        document.getElementById('addSdt').value = '';
+                        loadAll();
+                    } else {
+                        showAlert(data.message || 'Thêm thất bại', 'danger');
+                    }
+                })
+                .catch(err => showAlert('Lỗi: ' + err.message, 'danger'));
+        });
+
+        document.getElementById('btnSearch').addEventListener('click', doSearch);
+        document.getElementById('btnLoadAll').addEventListener('click', function() {
+            document.getElementById('searchKeyword').value = '';
+            loadAll();
+        });
+
+        document.addEventListener('DOMContentLoaded', loadAll);
+    </script>
+</body>
+</html>

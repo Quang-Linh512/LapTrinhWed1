@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.studentmanager.model.Student;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/demo")
 public class HelloController {
     //Bài 1
     @GetMapping("/hello")
@@ -43,8 +43,8 @@ public class HelloController {
         return new Student(1, "Le Quang Linh", 20, "linh@gmail.com");
     }
 
-    //Bài 5 - Đổi endpoint để tránh xung đột với StudentController
-    @GetMapping("/api/students")
+    //Bài 5 - Đổi endpoint để tránh xung đột với StudentApiController (/api/students)
+    @GetMapping("/students")
     public List<Student> getStudents() {
         List<Student> list = new ArrayList<>();
         list.add(new Student(1, "A", 20, "a@gmail.com"));

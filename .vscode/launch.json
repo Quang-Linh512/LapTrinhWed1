@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "Spring Boot - studentmanager",
+            "request": "launch",
+            "mainClass": "com.example.studentmanager.StudentmanagerApplication",
+            "projectName": "studentmanager",
+            "cwd": "${workspaceFolder}/studentmanager",
+            "preLaunchTask": "Maven: compile studentmanager"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot - studentmanager (Maven)",
+            "request": "launch",
+            "mainClass": "com.example.studentmanager.StudentmanagerApplication",
+            "projectName": "studentmanager",
+            "preLaunchTask": "Maven: compile studentmanager"
+        }
+    ]
+}
