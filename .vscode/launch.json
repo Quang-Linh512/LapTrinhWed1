@@ -1,7 +1,12 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
+        {
+            "type": "java",
+            "name": "SchoolmanagerApplication",
+            "request": "launch",
+            "mainClass": "com.example.schoolmanager.SchoolmanagerApplication"
+        },
         {
             "type": "java",
             "name": "Spring Boot - studentmanager",
